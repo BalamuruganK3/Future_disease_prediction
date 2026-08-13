@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Future Disease Prediction System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--pr:#1a237e;--ac:#00bcd4;--bg:#f0f4f8;--card:#fff;--tx:#1a1a2e;--mu:#607d8b;
+  --rd:#e53935;--wa:#f57c00;--gr:#2e7d32;--ra:14px;--sh:0 4px 20px rgba(0,0,0,.10)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--tx)}
+header{background:linear-gradient(135deg,#1a237e,#0288d1);color:#fff;padding:20px 28px;
+  display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+header h1{font-size:1.4rem;font-weight:700}
+header p{font-size:.85rem;opacity:.85;margin-top:2px}
+.container{max-width:1160px;margin:0 auto;padding:24px 16px}
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.tab-btn{padding:9px 22px;border-radius:30px;border:2px solid #c5cae9;background:#fff;
+  color:var(--pr);font-weight:600;font-size:.92rem;cursor:pointer;transition:all .2s}
+.tab-btn.active{background:var(--pr);color:#fff;border-color:var(--pr)}
+.fbar{display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:8px;
+  margin-bottom:18px;align-items:center;padding-bottom:4px}
+.fbar::-webkit-scrollbar{height:4px}
+.fbar::-webkit-scrollbar-thumb{background:#9fa8da;border-radius:4px}
+#mchips{display:flex;flex-direction:row;flex-wrap:nowrap;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;
+  background:#fff;border:2px solid #c5cae9;cursor:pointer;font-size:.86rem;font-weight:600;
+  color:var(--pr);white-space:nowrap;flex-shrink:0;transition:all .15s}
+.chip.active{background:var(--pr);color:#fff;border-color:var(--pr)}
+.chip .rm{font-size:.75rem;opacity:.7;background:rgba(0,0,0,.15);border-radius:50%;
+  width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center}
+.btn-add{display:inline-flex;align-items:center;white-space:nowrap;flex-shrink:0;padding:6px 14px;
+  border-radius:20px;border:2px dashed #90a4ae;background:transparent;color:var(--mu);
+  cursor:pointer;font-size:.86rem;font-weight:600;transition:all .2s}
+.btn-add:hover{border-color:var(--ac);color:var(--ac)}
+.fcard{background:var(--card);border-radius:var(--ra);box-shadow:var(--sh);padding:28px;margin-bottom:28px}
+.fcard h2{font-size:1.1rem;color:var(--pr);margin-bottom:18px;border-bottom:2px solid var(--ac);padding-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:.78rem;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
+.field .hint{font-size:.72rem;color:#90a4ae;font-style:italic;margin-top:1px}
+.field input,.field select{padding:9px 12px;border:1.5px solid #cfd8dc;border-radius:8px;
+  font-size:.93rem;background:#fafafa;color:var(--tx);transition:border .2s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--ac);background:#fff}
+.sec{grid-column:1/-1;font-size:.95rem;font-weight:700;color:var(--pr);
+  margin-top:8px;padding:6px 0 4px;border-bottom:1px solid #e0e0e0}
+.chkrow{display:flex;align-items:center;gap:8px;padding-top:4px}
+.chkrow input[type=checkbox]{width:17px;height:17px;accent-color:var(--ac)}
+.chkrow label{font-size:.93rem;color:var(--tx);font-weight:500}
+.btn-pred{grid-column:1/-1;margin-top:8px;background:linear-gradient(135deg,var(--pr),#0288d1);
+  color:#fff;border:none;border-radius:10px;padding:14px 36px;font-size:1rem;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 15px rgba(26,35,126,.3);transition:transform .15s}
+.btn-pred:hover{transform:translateY(-2px)}
+#val-box{display:none;background:#fff8e1;border:1.5px solid #ffb300;border-radius:10px;
+  padding:14px 18px;margin-bottom:18px;color:#7b4f00}
+#err-box{display:none;background:#fff0f0;border:1px solid #f5c6cb;border-radius:10px;
+  padding:14px 18px;margin-bottom:18px;color:#721c24}
+#loader{display:none;text-align:center;padding:40px}
+.spin{width:48px;height:48px;border:5px solid #e0e0e0;border-top-color:var(--ac);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#results{display:none}
+.rhdr{background:linear-gradient(135deg,#1a237e,#0288d1);color:#fff;border-radius:var(--ra);
+  padding:22px 26px;margin-bottom:22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.rhdr h2{font-size:1.2rem;margin-bottom:6px}
+.rsum{flex:1;min-width:180px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.badge{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 12px;font-size:.8rem;font-weight:600}
+.bmicirc{width:82px;height:82px;border-radius:50%;background:rgba(255,255,255,.2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+.bmicirc .val{font-size:1.4rem;font-weight:700}
+.bmicirc .lbl{font-size:.7rem;opacity:.85}
+.mrtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.mrt{padding:6px 16px;border-radius:20px;border:2px solid #c5cae9;background:#fff;
+  color:var(--pr);font-weight:600;font-size:.86rem;cursor:pointer}
+.mrt.active{background:var(--pr);color:#fff;border-color:var(--pr)}
+.abar{display:flex;gap:10px;margin-bottom:18px}
+.btn-pdf{background:linear-gradient(135deg,#c62828,#e53935);color:#fff;border:none;
+  border-radius:10px;padding:10px 22px;font-size:.92rem;font-weight:700;
+  cursor:pointer;box-shadow:0 3px 12px rgba(197,40,40,.3);transition:transform .15s}
+.btn-pdf:hover{transform:translateY(-2px)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.dcard{background:var(--card);border-radius:var(--ra);box-shadow:var(--sh);
+  overflow:hidden;border-top:4px solid var(--color,#607d8b);transition:transform .15s}
+.dcard:hover{transform:translateY(-3px)}
+.chead{padding:14px 18px 10px;display:flex;align-items:center;gap:10px}
+.chead .icon{font-size:1.7rem}
+.chead .name{font-weight:700;font-size:.97rem}
+.chead .desc{font-size:.8rem;color:var(--mu);margin-top:2px}
+.rbar{padding:0 18px 10px}
+.rlbl{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px}
+.rlbl span{font-weight:700}
+.rtrack{height:8px;border-radius:6px;background:#eceff1;overflow:hidden}
+.rfill{height:100%;border-radius:6px;transition:width .8s ease}
+.HIGH .rfill{background:var(--rd)}.MEDIUM .rfill{background:var(--wa)}.LOW .rfill{background:var(--gr)}
+.rchip{display:inline-block;border-radius:20px;padding:2px 10px;font-size:.75rem;font-weight:700}
+.HIGH .rchip{background:#ffebee;color:var(--rd)}.MEDIUM .rchip{background:#fff3e0;color:var(--wa)}.LOW .rchip{background:#e8f5e9;color:var(--gr)}
+.prev{padding:0 18px 14px}
+.prev h4{font-size:.85rem;color:var(--pr);margin-bottom:6px;font-weight:700}
+.prev ul{padding-left:14px}
+.prev li{font-size:.81rem;color:#455a64;margin-bottom:4px;line-height:1.5}
+.dinfo{padding:8px 18px 14px;background:#f5f7ff;border-top:1px solid #e8eaf6}
+.dinfo p{font-size:.8rem;color:#37474f;margin-bottom:3px}
+.dinfo strong{color:var(--pr)}
+.noriskmsg{background:#e8f5e9;border-radius:12px;padding:18px 22px;color:#2e7d32;
+  font-size:.97rem;font-weight:600;text-align:center;grid-column:1/-1}
+@media(max-width:600px){.grid{grid-template-columns:1fr 1fr}.dgrid{grid-template-columns:1fr}}
+
+#startup-overlay{position:fixed;top:0;left:0;width:100%;height:100%;
+  background:#1a237e;z-index:9999;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;color:#fff}
+#startup-overlay h2{font-size:1.5rem;margin-bottom:8px}
+#startup-overlay p{font-size:.95rem;opacity:.85;margin-bottom:28px}
+.prog-wrap{width:280px;height:8px;background:rgba(255,255,255,.2);border-radius:8px;overflow:hidden}
+.prog-bar{height:100%;background:var(--ac);border-radius:8px;width:0%;transition:width .4s}
+#startup-msg{font-size:.85rem;opacity:.7;margin-top:12px}
+</style>
+</head>
+<body>
+<div id="startup-overlay">
+  <div style="font-size:3rem;margin-bottom:16px">&#129516;</div>
+  <h2>Future Disease Prediction System</h2>
+  <p>Starting up — please wait a moment...</p>
+  <div class="prog-wrap"><div class="prog-bar" id="prog-bar"></div></div>
+  <div id="startup-msg">Loading CNN model...</div>
+</div>
+<header>
+  <div style="font-size:2rem">&#129516;</div>
+  <div>
+    <h1>Future Disease Prediction System</h1>
+    <p>CNN-based Deep Learning &nbsp;&middot;&nbsp; 8 Disease Prediction &nbsp;&middot;&nbsp; Prevention Guidance</p>
+  </div>
+</header>
+<div class="container">
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="setMode('single')">Single Person</button>
+    <button class="tab-btn" onclick="setMode('family')">Family Report</button>
+  </div>
+
+  <div class="fbar" id="fbar" style="display:none">
+    <div id="mchips"></div>
+    <button class="btn-add" onclick="addMember()">+ Add Member</button>
+  </div>
+
+  <div class="fcard">
+    <h2 id="ftitle">Enter Your Health Details</h2>
+    <div class="grid">
+
+      <div class="sec">Basic Details</div>
+      <div class="field"><label>Name</label><input type="text" id="member_name" placeholder="e.g. Ravi / Amma"></div>
+      <div class="field"><label>Age (years)</label><input type="number" id="age" min="1" max="120" value="35"></div>
+      <div class="field"><label>Gender</label>
+        <select id="gender"><option value="0">Male</option><option value="1">Female</option><option value="2">Other</option></select></div>
+      <div class="field"><label>Weight (kg)</label><input type="number" id="weight" min="10" max="300" value="70"></div>
+      <div class="field"><label>Height (cm)</label><input type="number" id="height" min="50" max="250" value="170">
+        <span class="hint">5 ft 7 in = 170 cm</span></div>
+      <div class="field"><label>Blood Group</label>
+        <select id="blood_group">
+          {% for i,bg in blood_groups %}<option value="{{ i }}">{{ bg }}</option>{% endfor %}
+        </select></div>
+      <div class="field"><label>Occupation / Job</label>
+        <select id="job">
+          {% for i,j in jobs %}<option value="{{ i }}">{{ j }}</option>{% endfor %}
+        </select></div>
+      <div class="field"><label>Air Quality at Your City (AQI)</label>
+        <select id="aqi_category">
+          {% for i,a in aqi_labels %}<option value="{{ i }}">{{ a }}</option>{% endfor %}
+        </select>
+        <span class="hint">Check aqi.in for your city AQI</span></div>
+
+      <div class="sec">Health Numbers <span style="font-weight:400;font-size:.8rem;color:var(--mu)">(from BP machine or last check-up)</span></div>
+      <div class="field"><label>Upper Blood Pressure (mmHg)</label>
+        <input type="number" id="systolic_bp" min="60" max="250" value="120">
+        <span class="hint">Normal: 90-120 &nbsp;|&nbsp; High: above 140</span></div>
+      <div class="field"><label>Lower Blood Pressure (mmHg)</label>
+        <input type="number" id="diastolic_bp" min="40" max="150" value="80">
+        <span class="hint">Normal: 60-80 &nbsp;|&nbsp; High: above 90</span></div>
+      <div class="field"><label>Empty Stomach Sugar (mg/dL)</label>
+        <input type="number" id="fasting_glucose" min="40" max="600" value="95">
+        <span class="hint">Normal: 70-100 &nbsp;|&nbsp; Diabetic: above 126</span></div>
+
+      <div class="sec">Daily Habits</div>
+      <div class="field"><label>Sleep Hours per Night</label>
+        <input type="number" id="sleep_hours" min="1" max="12" step="0.5" value="7">
+        <span class="hint">Minimum 1 hr &nbsp;|&nbsp; Healthy: 7 to 9 hrs</span></div>
+      <div class="field"><label>Stress Level (1=Calm, 10=Very Stressed)</label>
+        <input type="number" id="stress_level" min="1" max="10" value="5"></div>
+      <div class="field"><label>Exercise Days per Week</label>
+        <input type="number" id="physical_activity_days" min="0" max="7" value="3">
+        <span class="hint">Days you walk, gym, play sport etc.</span></div>
+
+      <div class="sec">Risk Factors</div>
+      <div class="field"><div class="chkrow"><input type="checkbox" id="smoking"><label for="smoking">Do you smoke?</label></div></div>
+      <div class="field"><div class="chkrow"><input type="checkbox" id="alcohol"><label for="alcohol">Drink alcohol regularly?</label></div></div>
+      <div class="field"><div class="chkrow"><input type="checkbox" id="family_history_diabetes"><label for="family_history_diabetes">Family has diabetes?</label></div></div>
+      <div class="field"><div class="chkrow"><input type="checkbox" id="family_history_heart"><label for="family_history_heart">Family has heart problems?</label></div></div>
+
+      <button class="btn-pred" onclick="runPredict()">Check My Health Risk</button>
+    </div>
+  </div>
+
+  <div id="val-box"><strong>Please fix these values:</strong>
+    <ul id="val-list" style="margin-top:6px;padding-left:16px;font-size:.88rem"></ul></div>
+  <div id="err-box"><strong>Error:</strong> <span id="err-msg"></span>
+    <p style="margin-top:6px;font-size:.82rem;color:#555">Make sure <code>python app.py</code> is running and open <strong>http://localhost:5000</strong></p></div>
+  <div id="loader"><div class="spin"></div><p style="color:var(--mu)">Checking your health data...</p></div>
+
+  <div id="results">
+    <div class="rhdr">
+      <div class="rsum">
+        <h2>Health Risk Report</h2>
+        <div id="rsum-text" style="font-size:.88rem;opacity:.9;margin-top:4px"></div>
+        <div class="badges" id="badges"></div>
+      </div>
+      <div class="bmicirc"><div class="val" id="bmi-val">--</div><div class="lbl">BMI</div></div>
+    </div>
+    <div class="mrtabs" id="mrtabs" style="display:none"></div>
+    <div class="abar"><button class="btn-pdf" onclick="downloadPDF()">Download PDF Report</button></div>
+    <div class="dgrid" id="dgrid"></div>
+  </div>
+</div>
+
+<script>
+var mode='single',members=[{name:'Person 1'}],activeIdx=0,saved={},allRes=[];
+var JOB_LABELS=[{% for i,j in jobs %}"{{ j }}",{% endfor %}];
+var BG_LABELS=[{% for i,bg in blood_groups %}"{{ bg }}",{% endfor %}];
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',(i===0&&m==='single')||(i===1&&m==='family'));});
+  document.getElementById('fbar').style.display=m==='family'?'flex':'none';
+  document.getElementById('ftitle').textContent=m==='single'?'Enter Your Health Details':'Enter Family Member Details';
+}
+
+function renderChips(){
+  document.getElementById('mchips').innerHTML=members.map(function(m,i){
+    return '<span class="chip '+(i===activeIdx?'active':'')+'" onclick="switchMember('+i+')">'+
+      (m.name||'Person '+(i+1))+
+      (members.length>1?'<span class="rm" onclick="removeMember(event,'+i+')">x</span>':'')+
+      '</span>';}).join('');
+}
+function addMember(){saveForm();members.push({name:'Person '+(members.length+1)});activeIdx=members.length-1;renderChips();clearForm();}
+function switchMember(idx){saveForm();activeIdx=idx;renderChips();loadForm(idx);}
+function removeMember(e,idx){e.stopPropagation();members.splice(idx,1);delete saved[idx];allRes.splice(idx,1);activeIdx=Math.min(activeIdx,members.length-1);renderChips();loadForm(activeIdx);if(allRes.filter(Boolean).length>0)showResults(activeIdx);}
+
+function gv(id){var e=document.getElementById(id);return e?e.value:'';}
+function gc(id){var e=document.getElementById(id);return e?e.checked:false;}
+function saveForm(){
+  var name=gv('member_name')||('Person '+(activeIdx+1));
+  members[activeIdx].name=name;
+  saved[activeIdx]={member_name:name,age:gv('age'),gender:gv('gender'),weight:gv('weight'),height:gv('height'),
+    blood_group:gv('blood_group'),job:gv('job'),aqi_category:gv('aqi_category'),
+    sleep_hours:gv('sleep_hours'),stress_level:gv('stress_level'),physical_activity_days:gv('physical_activity_days'),
+    smoking:gc('smoking'),alcohol:gc('alcohol'),family_history_diabetes:gc('family_history_diabetes'),family_history_heart:gc('family_history_heart'),
+    systolic_bp:gv('systolic_bp'),diastolic_bp:gv('diastolic_bp'),fasting_glucose:gv('fasting_glucose')};
+}
+function loadForm(idx){
+  var d=saved[idx];if(!d){clearForm();return;}
+  function sv(id,v){var e=document.getElementById(id);if(e)e.value=v;}
+  function sc(id,v){var e=document.getElementById(id);if(e)e.checked=!!v;}
+  sv('member_name',d.member_name||'');sv('age',d.age||35);sv('gender',d.gender||0);sv('weight',d.weight||70);sv('height',d.height||170);
+  sv('blood_group',d.blood_group||0);sv('job',d.job||0);sv('aqi_category',d.aqi_category||1);
+  sv('sleep_hours',d.sleep_hours||7);sv('stress_level',d.stress_level||5);sv('physical_activity_days',d.physical_activity_days||3);
+  sc('smoking',d.smoking);sc('alcohol',d.alcohol);sc('family_history_diabetes',d.family_history_diabetes);sc('family_history_heart',d.family_history_heart);
+  sv('systolic_bp',d.systolic_bp||120);sv('diastolic_bp',d.diastolic_bp||80);sv('fasting_glucose',d.fasting_glucose||95);
+}
+function clearForm(){
+  var defs={age:35,weight:70,height:170,sleep_hours:7,stress_level:5,physical_activity_days:3,systolic_bp:120,diastolic_bp:80,fasting_glucose:95,aqi_category:1};
+  Object.keys(defs).forEach(function(id){var e=document.getElementById(id);if(e)e.value=defs[id];});
+  ['smoking','alcohol','family_history_diabetes','family_history_heart'].forEach(function(id){var e=document.getElementById(id);if(e)e.checked=false;});
+  var mn=document.getElementById('member_name');if(mn)mn.value='';
+}
+
+function buildPayload(d){
+  return{age:parseInt(d.age)||30,weight:parseFloat(d.weight)||70,height:parseFloat(d.height)||170,
+    blood_group:parseInt(d.blood_group)||0,job:parseInt(d.job)||0,aqi_category:parseInt(d.aqi_category)||1,
+    sleep_hours:parseFloat(d.sleep_hours)||7,stress_level:parseInt(d.stress_level)||5,
+    physical_activity_days:parseInt(d.physical_activity_days)||0,
+    smoking:d.smoking?1:0,alcohol:d.alcohol?1:0,family_history_diabetes:d.family_history_diabetes?1:0,family_history_heart:d.family_history_heart?1:0,
+    systolic_bp:parseInt(d.systolic_bp)||120,diastolic_bp:parseInt(d.diastolic_bp)||80,fasting_glucose:parseInt(d.fasting_glucose)||95};
+}
+
+function validateP(p){
+  var errs=[];
+  if(p.age<1||p.age>120)errs.push('Age must be 1-120 years');
+  if(p.sleep_hours<=0)errs.push('Sleep cannot be 0 - minimum is 1 hour (zero sleep is not possible)');
+  if(p.sleep_hours>24)errs.push('Sleep cannot exceed 24 hours');
+  if(p.stress_level<=0)errs.push('Stress level cannot be 0 - minimum is 1');
+  if(p.stress_level>10)errs.push('Stress level cannot exceed 10');
+  if(p.physical_activity_days<0||p.physical_activity_days>7)errs.push('Exercise days must be 0 to 7');
+  if(p.weight<10||p.weight>300)errs.push('Weight must be 10-300 kg');
+  if(p.height<50||p.height>250)errs.push('Height must be 50-250 cm');
+  return errs;
+}
+
+async function runPredict(){
+  saveForm();
+  document.getElementById('val-box').style.display='none';
+  document.getElementById('err-box').style.display='none';
+  document.getElementById('results').style.display='none';
+  document.getElementById('loader').style.display='block';
+  try{
+    if(mode==='single'){
+      var d=saved[activeIdx];
+      if(!d)throw new Error('Please fill in your details first');
+      var payload=buildPayload(d);
+      var errs=validateP(payload);
+      if(errs.length>0){
+        document.getElementById('val-list').innerHTML=errs.map(function(e){return'<li>'+e+'</li>';}).join('');
+        document.getElementById('val-box').style.display='block';
+        document.getElementById('loader').style.display='none';
+        return;
+      }
+      var result=await callAPI(payload);
+      result.memberName=d.member_name||'You';
+      result.job_label=JOB_LABELS[payload.job]||'';
+      result.blood_group_label=BG_LABELS[payload.blood_group]||'';
+      result.age=payload.age;
+      allRes[activeIdx]=result;
+      showResults(activeIdx);
+    }else{
+      for(var i=0;i<members.length;i++){
+        var di=saved[i];
+        if(!di){alert('Please fill details for '+members[i].name);document.getElementById('loader').style.display='none';return;}
+        var pi=buildPayload(di);
+        var ri=await callAPI(pi);
+        ri.memberName=members[i].name||('Person '+(i+1));
+        ri.job_label=JOB_LABELS[pi.job]||'';ri.blood_group_label=BG_LABELS[pi.blood_group]||'';ri.age=pi.age;
+        allRes[i]=ri;
+      }
+      showResults(activeIdx);
+    }
+  }catch(e){
+    document.getElementById('err-msg').textContent=e.message;
+    document.getElementById('err-box').style.display='block';
+    console.error(e);
+  }
+  document.getElementById('loader').style.display='none';
+}
+
+async function callAPI(payload){
+  var ctrl=new AbortController();
+  var timer=setTimeout(function(){ctrl.abort();},30000);
+  var res=await fetch('/predict',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal});
+  clearTimeout(timer);
+  if(!res.ok){var t=await res.text();throw new Error('Server error '+res.status+': '+t.substring(0,200));}
+  var data=await res.json();
+  if(!data.success)throw new Error(data.error||'Unknown server error');
+  return data.result;
+}
+
+function bmiLabel(b){return b<18.5?'Underweight':b<25?'Normal':b<30?'Overweight':'Obese';}
+
+function showResults(idx){
+  var r=allRes[idx];if(!r)return;
+  document.getElementById('bmi-val').textContent=r.bmi;
+  document.getElementById('rsum-text').textContent=(r.memberName?r.memberName+' | ':'')+
+    'Age: '+r.age+' | Job: '+r.job_label+' | Blood: '+r.blood_group_label+' | BMI: '+r.bmi+' ('+bmiLabel(r.bmi)+')';
+  var hi=r.predictions.filter(function(p){return p.risk==='HIGH';});
+  var md=r.predictions.filter(function(p){return p.risk==='MEDIUM';});
+  var lw=r.predictions.filter(function(p){return p.risk==='LOW';});
+  var bd=document.getElementById('badges');bd.innerHTML='';
+  if(hi.length)bd.innerHTML+='<span class="badge" style="background:rgba(229,57,53,.35)">'+hi.length+' High Risk</span>';
+  if(md.length)bd.innerHTML+='<span class="badge" style="background:rgba(245,124,0,.35)">'+md.length+' Medium Risk</span>';
+  if(lw.length)bd.innerHTML+='<span class="badge" style="background:rgba(46,125,50,.35)">'+lw.length+' Low Risk</span>';
+  var tabs=document.getElementById('mrtabs');
+  var done=allRes.filter(Boolean);
+  if(done.length>1){
+    tabs.style.display='flex';
+    tabs.innerHTML=allRes.map(function(mr,i){
+      if(!mr)return'';
+      var h=mr.predictions.filter(function(p){return p.risk==='HIGH';}).length;
+      return'<button class="mrt '+(i===idx?'active':'')+'" onclick="showResults('+i+')">'+mr.memberName+(h>0?' ('+h+' High)':'')+' </button>';
+    }).join('');
+  }else tabs.style.display='none';
+  var atRisk=r.predictions.filter(function(p){return p.risk!=='LOW';});
+  var grid=document.getElementById('dgrid');
+  if(atRisk.length===0){
+    grid.innerHTML='<div class="noriskmsg">Great news! No significant health risks found. Keep eating well, sleeping well, and staying active!</div>';
+  }else{
+    grid.innerHTML=atRisk.map(function(p){return(
+      '<div class="dcard '+p.risk+'" style="--color:'+p.color+'">'+
+      '<div class="chead"><div class="icon">'+p.icon+'</div><div><div class="name">'+p.name+'</div><div class="desc">'+p.description+'</div></div></div>'+
+      '<div class="rbar"><div class="rlbl"><span>Risk: '+p.probability+'%</span><span class="rchip">'+p.risk+' RISK</span></div>'+
+      '<div class="rtrack"><div class="rfill" style="width:0%" data-w="'+p.probability+'%"></div></div></div>'+
+      '<div class="prev"><h4>What you can do</h4><ul>'+p.prevention.map(function(s){return'<li>'+s+'</li>';}).join('')+'</ul></div>'+
+      '<div class="dinfo"><p><strong>Best foods:</strong> '+p.diet+'</p><p style="margin-top:4px"><strong>Exercise tip:</strong> '+p.exercise+'</p></div>'+
+      '</div>');}).join('');
+    setTimeout(function(){document.querySelectorAll('.rfill').forEach(function(el){el.style.width=el.dataset.w;});},100);
+  }
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+
+function downloadPDF(){
+  if(!window.jspdf||!window.jspdf.jsPDF){alert('PDF library loading. Wait 2 seconds and try again.');return;}
+  var toPrint=allRes.filter(Boolean);
+  if(toPrint.length===0){alert('No results yet. Click Check My Health Risk first.');return;}
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({unit:'mm',format:'a4'});
+  var y=0;
+  function chk(n){if(y+(n||8)>275){doc.addPage();y=18;}}
+  toPrint.forEach(function(r,mi){
+    if(mi>0){doc.addPage();y=0;}
+    doc.setFillColor(26,35,126);doc.rect(0,0,210,28,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(14);doc.setFont('helvetica','bold');
+    doc.text('Future Disease Prediction Report',14,12);
+    doc.setFontSize(9);doc.setFont('helvetica','normal');
+    doc.text('CNN-Based Health Risk Analysis | '+new Date().toLocaleDateString(),14,21);
+    y=34;
+    doc.setFillColor(240,244,248);doc.roundedRect(12,y,186,22,3,3,'F');
+    doc.setTextColor(26,35,126);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text(r.memberName||'Patient',16,y+8);
+    doc.setTextColor(50,50,50);doc.setFont('helvetica','normal');doc.setFontSize(9);
+    doc.text('Age: '+r.age+' | Job: '+(r.job_label||'')+' | Blood: '+(r.blood_group_label||'')+' | BMI: '+r.bmi+' ('+bmiLabel(r.bmi)+')',16,y+16);
+    y+=28;
+    var atRisk=r.predictions.filter(function(p){return p.risk!=='LOW';});
+    if(atRisk.length===0){doc.setTextColor(46,125,50);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('No significant health risks found!',16,y);return;}
+    var hi=atRisk.filter(function(p){return p.risk==='HIGH';}).length;
+    var md=atRisk.filter(function(p){return p.risk==='MEDIUM';}).length;
+    doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+    doc.text('Risks: '+hi+' High   '+md+' Medium',16,y);y+=8;
+    atRisk.forEach(function(p){
+      chk(40);
+      var rc=p.risk==='HIGH'?[229,57,53]:p.risk==='MEDIUM'?[245,124,0]:[46,125,50];
+      doc.setFillColor(rc[0],rc[1],rc[2]);doc.rect(12,y,186,10,'F');
+      doc.setTextColor(255,255,255);doc.setFontSize(10);doc.setFont('helvetica','bold');
+      doc.text(p.name+' - '+p.risk+' RISK ('+p.probability+'%)',16,y+7);y+=13;
+      doc.setTextColor(70,70,70);doc.setFontSize(8.5);doc.setFont('helvetica','italic');doc.text(p.description,16,y);y+=6;
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(26,35,126);doc.text('What you can do:',16,y);y+=5;
+      doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);doc.setFontSize(8.5);
+      p.prevention.forEach(function(s){chk(8);var ln=doc.splitTextToSize('- '+s,168);doc.text(ln,18,y);y+=ln.length*4.5;});
+      chk(10);doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(26,35,126);doc.text('Best foods: ',16,y);
+      doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);var dl=doc.splitTextToSize(p.diet,150);doc.text(dl,44,y);y+=Math.max(5,dl.length*4.5);
+      chk(10);doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(26,35,126);doc.text('Exercise: ',16,y);
+      doc.setFont('helvetica','normal');doc.setTextColor(40,40,40);var el=doc.splitTextToSize(p.exercise,155);doc.text(el,38,y);y+=Math.max(5,el.length*4.5)+4;
+      doc.setDrawColor(220,220,220);doc.line(12,y,198,y);y+=6;chk();
+    });
+    doc.setTextColor(160,160,160);doc.setFontSize(7.5);doc.setFont('helvetica','italic');
+    doc.text('For awareness only. Consult a doctor for medical advice.',14,288);
+  });
+  var fn=(toPrint.length>1?'Family':'Health')+'_Risk_Report_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.pdf';
+  doc.save(fn);
+}
+</script>
+
+<script>
+(function(){
+  var overlay = document.getElementById('startup-overlay');
+  var bar     = document.getElementById('prog-bar');
+  var msg     = document.getElementById('startup-msg');
+  var btn     = document.querySelector('.btn-pred');
+  var pct     = 5;
+
+  // Animate bar while waiting
+  var grow = setInterval(function(){
+    pct = Math.min(pct + 2, 85);
+    bar.style.width = pct + '%';
+  }, 200);
+
+  function poll(){
+    fetch('/ready')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.ready){
+          clearInterval(grow);
+          bar.style.width = '100%';
+          msg.textContent = 'Ready!';
+          setTimeout(function(){
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.4s';
+            setTimeout(function(){ overlay.style.display='none'; }, 400);
+          }, 300);
+        } else if(d.error){
+          msg.textContent = 'Error: ' + d.error;
+        } else {
+          msg.textContent = 'Loading model... please wait';
+          setTimeout(poll, 600);
+        }
+      })
+      .catch(function(){ setTimeout(poll, 800); });
+  }
+  poll();
+})();
+</script>
+</body>
+</html>
